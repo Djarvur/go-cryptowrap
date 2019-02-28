@@ -1,0 +1,21 @@
+# cryptowrap image:https://godoc.org/github.com/Djarvur/cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/cryptowrap"] image:https://travis-ci.org/Djarvur/cryptowrap.svg["Build Status",link="https://travis-ci.org/Djarvur/cryptowrap"] image:https://coveralls.io/repos/Djarvur/cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/cryptowrap?branch=master"]
+
+JSON-based Marshaler/Unmarshaler with AES encryption
+
+See the doc for details.
+
+## Benchmark
+
+Raw is no-encryption wrapper, just to compare with crypto.
+
+```
+$go test -bench=.
+goos: darwin
+goarch: amd64
+pkg: github.com/Djarvur/cryptowrap
+BenchmarkRaw-4          	 1000000	      2267 ns/op
+BenchmarkWrapper128-4   	  100000	     15406 ns/op
+BenchmarkWrapper256-4   	  100000	     18026 ns/op
+PASS
+ok  	github.com/Djarvur/cryptowrap	5.997s
+```
