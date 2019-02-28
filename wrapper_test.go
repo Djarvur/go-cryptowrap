@@ -86,24 +86,38 @@ func testWrapper(t *testing.T, keyLen int) {
 		t.Fatal("decrypted is not equal to original")
 	}
 
-	dst = cryptowrap.Wrapper{
-		Keys:    keys[:1],
-		Payload: &TestData{},
-	}
-
-	err = json.Unmarshal(data, &dst)
+	err = json.Unmarshal(
+		data,
+		&cryptowrap.Wrapper{
+			Keys: keys[:1],
+		},
+	)
 	if err == nil {
 		t.Fatal("decrypted undecryptable")
 	}
 
-	dst = cryptowrap.Wrapper{
-		Payload: &TestData{},
-	}
-
-	err = json.Unmarshal(data, &dst)
+	err = json.Unmarshal(
+		data,
+		&cryptowrap.Wrapper{
+			Payload: &TestData{},
+		},
+	)
 	if err == nil {
 		t.Fatal("decrypted undecryptable")
 	}
+
+	badKey := [][]byte{randBytes(15)}
+
+	err = json.Unmarshal(data, &cryptowrap.Wrapper{Keys: badKey})
+	if err == nil {
+		t.Fatal("decrypted undecryptable")
+	}
+
+	_, err = json.Marshal(&cryptowrap.Wrapper{Keys: badKey, Payload: &orig})
+	if err == nil {
+		t.Fatal("encrypted unencryptable")
+	}
+
 }
 
 func randBytes(keyLen int) []byte {
