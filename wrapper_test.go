@@ -122,6 +122,19 @@ func testWrapper(t *testing.T, keyLen int) {
 	if err == nil {
 		t.Fatal("encrypted unencryptable")
 	}
+
+	data[len(data)/2] = 0
+
+	err = json.Unmarshal(
+		data,
+		&cryptowrap.Wrapper{
+			Keys: keys,
+		},
+	)
+	if err == nil {
+		t.Fatal("decrypted undecryptable")
+	}
+
 }
 
 func randBytes(keyLen int) []byte {
