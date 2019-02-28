@@ -2,7 +2,19 @@
 
 JSON-based Marshaler/Unmarshaler with AES encryption
 
-See the doc for details.
+cryptowrap.Wrapper is a struct with custom JSON marshaler and unmarshaler.
+
+Marshaler will encrypt Payload with AES using first value from Keys as a key
+and provided IV as an initialisation vector.
+Random string will be used if no IV provided.
+
+Actual AES form will be chosen based on first Keys value length.
+
+Serialised data are protected by checksum.
+
+Unmarshaler will decrypt Payload with the Keys provided.
+Keys will be tryied one by one until success decryption. Success means checksum check satisfied.
+ErrUndecryptable will be returned in case no one key is suitable.
 
 ## Benchmark
 

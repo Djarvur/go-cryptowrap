@@ -17,7 +17,7 @@ var (
 	ErrInvalidInput = errors.New("invalid input")
 )
 
-// DecryptAESCBCunpad will decrypt your data and trim the padding
+// DecryptAESCBCunpad will decrypt your data and trim the padding.
 func DecryptAESCBCunpad(src, key, iv []byte) ([]byte, error) {
 	dst, err := DecryptAESCBC(src, key, iv)
 	if err != nil {
@@ -26,7 +26,7 @@ func DecryptAESCBCunpad(src, key, iv []byte) ([]byte, error) {
 	return Pkcs7Unpad(dst, len(key))
 }
 
-// DecryptAESCBC will decrypt your data
+// DecryptAESCBC will decrypt your data.
 func DecryptAESCBC(src, key, iv []byte) (dst []byte, err error) {
 	defer catch(&err)
 
@@ -42,7 +42,7 @@ func DecryptAESCBC(src, key, iv []byte) (dst []byte, err error) {
 	return dst, nil
 }
 
-// EncryptAESCBCpad will pad your data and encrypt them
+// EncryptAESCBCpad will pad your data and encrypt them.
 func EncryptAESCBCpad(src, key, iv []byte) ([]byte, error) {
 	src, err := Pkcs7Pad(src, len(key))
 	if err != nil {
@@ -51,7 +51,7 @@ func EncryptAESCBCpad(src, key, iv []byte) ([]byte, error) {
 	return EncryptAESCBC(src, key, iv)
 }
 
-// EncryptAESCBC will encrypt your data
+// EncryptAESCBC will encrypt your data.
 func EncryptAESCBC(src, key, iv []byte) ([]byte, error) {
 	dst := make([]byte, len(src))
 
@@ -66,7 +66,7 @@ func EncryptAESCBC(src, key, iv []byte) ([]byte, error) {
 	return dst, nil
 }
 
-// Pkcs7Pad will pad your data
+// Pkcs7Pad will pad your data.
 func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
 	if blocklen <= 0 {
 		return nil, errors.Wrapf(ErrInvalidInput, "invalid blocklen %d", blocklen)
@@ -80,7 +80,7 @@ func Pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
 	return append(data, pad...), nil
 }
 
-// Pkcs7Unpad will trim the padding from your data
+// Pkcs7Unpad will trim the padding from your data.
 func Pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
 	if blocklen <= 0 {
 		return nil, errors.Wrapf(ErrInvalidInput, "invalid blocklen %d", blocklen)
