@@ -118,6 +118,10 @@ func testWrapper(t *testing.T, keyLen int) {
 		t.Fatal("encrypted unencryptable")
 	}
 
+	_, err = json.Marshal(&cryptowrap.Wrapper{Payload: &orig})
+	if err == nil {
+		t.Fatal("encrypted unencryptable")
+	}
 }
 
 func randBytes(keyLen int) []byte {
