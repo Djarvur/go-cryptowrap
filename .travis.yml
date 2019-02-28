@@ -14,7 +14,7 @@ before_install:
   - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh
 
 script:
-  - test -z "$(goimports -d ./)"
+  - fmtProblems="$(goimports -d ./)" test -z "$fmtProblems"
   - ./bin/golangci-lint run
   - go test -v -race ./...
 
