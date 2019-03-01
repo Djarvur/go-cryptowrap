@@ -1,4 +1,4 @@
-package cryptowrap
+package cryptowrap_test
 
 import "crypto/rand"
 

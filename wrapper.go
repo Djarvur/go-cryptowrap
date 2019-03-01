@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"hash/crc32"
 
+	"github.com/Djarvur/go-aescrypt"
 	"github.com/pkg/errors"
 )
 
@@ -48,7 +49,7 @@ type junkWrapper struct {
 	Junk    []byte
 }
 
-// MarshalJSON is a custom marshaler
+// MarshalJSON is a custom marshaler.
 func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	if len(w.Keys) < 1 {
 		return nil, errors.WithStack(ErrNoKey)
@@ -62,17 +63,11 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	)
 
 	if w.IV == nil {
-		w.IV, err = RandBytes(aes.BlockSize)
-		if err != nil {
-			return nil, errors.Wrap(err, "reading random")
-		}
+		w.IV = randBytes(aes.BlockSize)
 	}
 
 	junkW.Payload = w.Payload
-	junkW.Junk, err = RandBytes(len(w.Keys[0]))
-	if err != nil {
-		return nil, errors.Wrap(err, "reading random")
-	}
+	junkW.Junk = randBytes(len(w.Keys[0]))
 
 	intW.Payload, err = json.Marshal(&junkW)
 	if err != nil {
@@ -86,7 +81,7 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	}
 	extW.IV = w.IV
 
-	extW.Payload, err = EncryptAESCBCpad(extW.Payload, w.Keys[0], w.IV)
+	extW.Payload, err = aescrypt.EncryptAESCBCPadded(extW.Payload, w.Keys[0], w.IV)
 	if err != nil {
 		return nil, errors.Wrap(err, "encrypting")
 	}
@@ -99,7 +94,7 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	return data, err
 }
 
-// UnmarshalJSON is a custom unmarshaler
+// UnmarshalJSON is a custom unmarshaler.
 func (w *Wrapper) UnmarshalJSON(data []byte) error {
 	if len(w.Keys) < 1 {
 		return errors.WithStack(ErrNoKey)
@@ -112,7 +107,7 @@ func (w *Wrapper) UnmarshalJSON(data []byte) error {
 	}
 
 	for _, key := range w.Keys {
-		data, err = DecryptAESCBCunpad(extW.Payload, key, extW.IV)
+		data, err = aescrypt.DecryptAESCBCPadded(extW.Payload, key, extW.IV)
 		if err != nil {
 			continue
 		}

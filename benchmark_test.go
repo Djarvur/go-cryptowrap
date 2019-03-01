@@ -70,10 +70,7 @@ func benchmarkWrapper(b *testing.B, keyLen int) {
 		Field string
 	}
 
-	key, err := cryptowrap.RandBytes(keyLen)
-	if err != nil {
-		panic(err)
-	}
+	key := randBytes(keyLen)
 
 	b.StartTimer()
 

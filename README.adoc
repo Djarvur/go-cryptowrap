@@ -1,4 +1,4 @@
-# cryptowrap image:https://godoc.org/github.com/Djarvur/cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/cryptowrap"] image:https://travis-ci.org/Djarvur/cryptowrap.svg["Build Status",link="https://travis-ci.org/Djarvur/cryptowrap"] image:https://coveralls.io/repos/Djarvur/cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/cryptowrap?branch=master"]
+# cryptowrap image:https://godoc.org/github.com/Djarvur/go-cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/go-cryptowrap"] image:https://travis-ci.org/Djarvur/go-cryptowrap.svg["Build Status",link="https://travis-ci.org/Djarvur/go-cryptowrap"] image:https://coveralls.io/repos/Djarvur/go-cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/go-cryptowrap?branch=master"]
 
 JSON-based Marshaler/Unmarshaler with AES encryption
 
@@ -21,13 +21,13 @@ ErrUndecryptable will be returned in case no one key is suitable.
 Raw is no-encryption wrapper, just to compare with crypto.
 
 ```
-$go test -bench=.
+$go test -bench=. -benchmem
 goos: darwin
 goarch: amd64
 pkg: github.com/Djarvur/cryptowrap
-BenchmarkRaw-4          	 1000000	      2267 ns/op
-BenchmarkWrapper128-4   	  100000	     15406 ns/op
-BenchmarkWrapper256-4   	  100000	     18026 ns/op
+BenchmarkRaw-4          500000    2359 ns/op    392 B/op   11 allocs/op
+BenchmarkWrapper128-4   100000   15665 ns/op   4033 B/op   58 allocs/op
+BenchmarkWrapper256-4   100000   18153 ns/op   4713 B/op   58 allocs/op
 PASS
-ok  	github.com/Djarvur/cryptowrap	5.997s
+ok  	github.com/Djarvur/cryptowrap	4.949s
 ```

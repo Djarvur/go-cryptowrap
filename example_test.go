@@ -8,10 +8,7 @@ import (
 )
 
 func Example_direct() {
-	key, err := cryptowrap.RandBytes(16)
-	if err != nil {
-		panic(err)
-	}
+	key := []byte("0123456789ABCDEF")
 
 	src := "hello!"
 
@@ -50,10 +47,7 @@ func Example_embeded() {
 		Field string
 	}
 
-	key, err := cryptowrap.RandBytes(16)
-	if err != nil {
-		panic(err)
-	}
+	key := []byte("0123456789ABCDEF")
 
 	srcSecure := toPassSecure{"world!"}
 
