@@ -16,6 +16,62 @@ Unmarshaler will decrypt Payload with the Keys provided.
 Keys will be tryied one by one until success decryption. Success means checksum check satisfied.
 ErrUndecryptable will be returned in case no one key is suitable.
 
+## Example
+
+```
+	type toPass struct {
+		Insecure string
+		Secure   cryptowrap.Wrapper
+	}
+
+	type toPassSecure struct {
+		Field string
+	}
+
+	key := []byte("0123456789ABCDEF")
+
+	srcSecure := toPassSecure{"world!"}
+
+	src := toPass{
+		Insecure: "hello",
+		Secure: cryptowrap.Wrapper{
+			Keys:    [][]byte{key},
+			Payload: &srcSecure,
+		},
+	}
+
+	data, err := json.Marshal(&src)
+	if err != nil {
+		panic(err)
+	}
+
+	//	var onTheGo interface{}
+	//
+	//	err = json.Unmarshal(data, &onTheGo)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	log.Printf("payload is encrypted: %v\n", onTheGo)
+
+	var dstSecure toPassSecure
+
+	dst := toPass{
+		Secure: cryptowrap.Wrapper{
+			Keys:    [][]byte{key},
+			Payload: &dstSecure,
+		},
+	}
+
+	err = json.Unmarshal(data, &dst)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%v\n", dst.Secure.Payload.(*toPassSecure).Field)
+	// Output: world!
+```
+
 ## Benchmark
 
 Raw is no-encryption wrapper, just to compare with crypto.
