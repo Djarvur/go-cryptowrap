@@ -1,11 +1,14 @@
 package cryptowrap
 
 import (
+	"bytes"
 	"crypto/aes"
 	"encoding/json"
 	"hash/crc32"
+	"io/ioutil"
 
 	"github.com/Djarvur/go-aescrypt"
+	"github.com/pierrec/lz4"
 	"github.com/pkg/errors"
 )
 
@@ -28,10 +31,13 @@ var (
 // Unmarshaler will decrypt Payload with the Keys provided.
 // Keys will be tryied one by one until success decryption. Success means checksum check satisfied.
 // ErrUndecryptable will be returned in case no one key is suitable.
+//
+// If Compress is true serialized Payload wil be compressed with LZ4.
 type Wrapper struct {
-	Keys    [][]byte
-	IV      []byte
-	Payload interface{}
+	Keys     [][]byte
+	IV       []byte
+	Payload  interface{}
+	Compress bool
 }
 
 type externalWrapper struct {
@@ -40,8 +46,9 @@ type externalWrapper struct {
 }
 
 type internalWrapper struct {
-	Checksum uint32
-	Payload  []byte
+	Checksum   uint32
+	Payload    []byte
+	Compressed bool
 }
 
 type junkWrapper struct {
@@ -73,6 +80,15 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling payload")
 	}
+
+	if w.Compress {
+		intW.Payload, err = compress(intW.Payload)
+		if err != nil {
+			return nil, err
+		}
+		intW.Compressed = true
+	}
+
 	intW.Checksum = crc32.ChecksumIEEE(intW.Payload)
 
 	extW.Payload, err = json.Marshal(&intW)
@@ -123,6 +139,13 @@ func (w *Wrapper) UnmarshalJSON(data []byte) error {
 			continue
 		}
 
+		if intW.Compressed {
+			intW.Payload, err = decompress(intW.Payload)
+			if err != nil {
+				return err
+			}
+		}
+
 		junkW := junkWrapper{
 			Payload: w.Payload,
 		}
@@ -137,4 +160,33 @@ func (w *Wrapper) UnmarshalJSON(data []byte) error {
 	}
 
 	return errors.WithStack(ErrUndecryptable)
+}
+
+func compress(data []byte) ([]byte, error) {
+	buf := &bytes.Buffer{}
+
+	compressor := lz4.NewWriter(buf)
+
+	_, err := compressor.Write(data)
+	if err != nil {
+		return nil, errors.Wrap(err, "compressing")
+	}
+
+	err = compressor.Close()
+	if err != nil {
+		return nil, errors.Wrap(err, "compressing")
+	}
+
+	return buf.Bytes(), nil
+}
+
+func decompress(data []byte) ([]byte, error) {
+	buf := bytes.NewBuffer(data)
+
+	data, err := ioutil.ReadAll(lz4.NewReader(buf))
+	if err != nil {
+		return nil, errors.Wrap(err, "decompressing")
+	}
+
+	return data, nil
 }

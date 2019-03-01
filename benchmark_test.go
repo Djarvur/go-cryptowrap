@@ -50,15 +50,24 @@ func BenchmarkRaw(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkWrapper128(b *testing.B) {
-	benchmarkWrapper(b, 16)
+	benchmarkWrapper(b, 16, false)
 }
 
 func BenchmarkWrapper256(b *testing.B) {
-	benchmarkWrapper(b, 32)
+	benchmarkWrapper(b, 32, false)
 }
 
-func benchmarkWrapper(b *testing.B, keyLen int) {
+func BenchmarkWrapper128Compress(b *testing.B) {
+	benchmarkWrapper(b, 16, true)
+}
+
+func BenchmarkWrapper256Compress(b *testing.B) {
+	benchmarkWrapper(b, 32, true)
+}
+
+func benchmarkWrapper(b *testing.B, keyLen int, compress bool) {
 	b.StopTimer()
 
 	type toPass struct {
@@ -82,6 +91,7 @@ func benchmarkWrapper(b *testing.B, keyLen int) {
 			Secure: cryptowrap.Wrapper{
 				Keys:    [][]byte{key},
 				Payload: &srcSecure,
+				Compress: compress,
 			},
 		}
 

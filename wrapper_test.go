@@ -15,14 +15,22 @@ type TestData struct {
 }
 
 func TestWrapper128(t *testing.T) {
-	testWrapper(t, 16)
+	testWrapper(t, 16, false)
 }
 
 func TestWrapper256(t *testing.T) {
-	testWrapper(t, 32)
+	testWrapper(t, 32, false)
 }
 
-func testWrapper(t *testing.T, keyLen int) {
+func TestWrapper128Compress(t *testing.T) {
+	testWrapper(t, 16, true)
+}
+
+func TestWrapper256Compress(t *testing.T) {
+	testWrapper(t, 32, true)
+}
+
+func testWrapper(t *testing.T, keyLen int, compress bool) {
 	keys := [][]byte{
 		randBytes(keyLen),
 		randBytes(keyLen),
@@ -31,12 +39,13 @@ func testWrapper(t *testing.T, keyLen int) {
 	orig := TestData{
 		Field1: "Field1",
 		Field2: "Field2",
-		Field3: "Field3",
+		Field3: "                                                  ",
 	}
 
 	src := cryptowrap.Wrapper{
-		Keys:    keys[1:],
-		Payload: &orig,
+		Keys:     keys[1:],
+		Payload:  &orig,
+		Compress: compress,
 	}
 
 	data, err := json.Marshal(&src)
@@ -96,7 +105,7 @@ func TestWrapperNegative(t *testing.T) {
 	orig := TestData{
 		Field1: "Field1",
 		Field2: "Field2",
-		Field3: "Field3",
+		Field3: "                                                  ",
 	}
 
 	src := cryptowrap.Wrapper{
