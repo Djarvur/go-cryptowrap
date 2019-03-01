@@ -89,8 +89,8 @@ func benchmarkWrapper(b *testing.B, keyLen int, compress bool) {
 		src := toPass{
 			Insecure: "hello",
 			Secure: cryptowrap.Wrapper{
-				Keys:    [][]byte{key},
-				Payload: &srcSecure,
+				Keys:     [][]byte{key},
+				Payload:  &srcSecure,
 				Compress: compress,
 			},
 		}

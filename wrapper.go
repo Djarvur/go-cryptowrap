@@ -7,7 +7,7 @@ import (
 	"hash/crc32"
 	"io/ioutil"
 
-	"github.com/Djarvur/go-aescrypt"
+	aescrypt "github.com/Djarvur/go-aescrypt"
 	"github.com/pierrec/lz4"
 	"github.com/pkg/errors"
 )
@@ -46,9 +46,9 @@ type externalWrapper struct {
 }
 
 type internalWrapper struct {
+	Compressed bool
 	Checksum   uint32
 	Payload    []byte
-	Compressed bool
 }
 
 type junkWrapper struct {
