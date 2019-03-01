@@ -25,11 +25,11 @@ $go test -bench=. -benchmem
 goos: darwin
 goarch: amd64
 pkg: github.com/Djarvur/cryptowrap
-BenchmarkRaw-4                  	  500000	      3073 ns/op	     392 B/op	      11 allocs/op
-BenchmarkWrapper128-4           	   50000	     22673 ns/op	    4202 B/op	      58 allocs/op
-BenchmarkWrapper256-4           	   50000	     26089 ns/op	    4850 B/op	      58 allocs/op
-BenchmarkWrapper128Compress-4   	    1000	   1717042 ns/op	17319552 B/op	      77 allocs/op
-BenchmarkWrapper256Compress-4   	    1000	   1750608 ns/op	17320554 B/op	      78 allocs/op
+BenchmarkRaw-4                  500000      3073 ns/op        392 B/op   11 allocs/op
+BenchmarkWrapper128-4            50000     22673 ns/op       4202 B/op   58 allocs/op
+BenchmarkWrapper256-4            50000     26089 ns/op       4850 B/op   58 allocs/op
+BenchmarkWrapper128Compress-4     1000   1717042 ns/op   17319552 B/op   77 allocs/op
+BenchmarkWrapper256Compress-4     1000   1750608 ns/op   17320554 B/op   78 allocs/op
 PASS
 ok  	github.com/Djarvur/cryptowrap	8.442s
 ```
