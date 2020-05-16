@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"crypto/aes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"hash/crc32"
 	"io/ioutil"
 
 	aescrypt "github.com/Djarvur/go-aescrypt"
 	"github.com/pierrec/lz4"
-	"github.com/pkg/errors"
 )
 
 // Errors might be returned. They will be wrapped with stacktrace at least, of course.
@@ -59,7 +60,7 @@ type junkWrapper struct {
 // MarshalJSON is a custom marshaler.
 func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	if len(w.Keys) < 1 {
-		return nil, errors.WithStack(ErrNoKey)
+		return nil, ErrNoKey
 	}
 
 	var (
@@ -78,7 +79,7 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 
 	intW.Payload, err = json.Marshal(&junkW)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshaling payload")
+		return nil, fmt.Errorf("marshaling payload: %w", err)
 	}
 
 	if w.Compress {
@@ -93,18 +94,18 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 
 	extW.Payload, err = json.Marshal(&intW)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshaling payload wrapper")
+		return nil, fmt.Errorf("marshaling payload wrapper: %w", err)
 	}
 	extW.IV = w.IV
 
 	extW.Payload, err = aescrypt.EncryptAESCBCPadded(extW.Payload, w.Keys[0], w.IV)
 	if err != nil {
-		return nil, errors.Wrap(err, "encrypting")
+		return nil, fmt.Errorf("encrypting: %w", err)
 	}
 
 	data, err := json.Marshal(&extW)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshaling")
+		return nil, fmt.Errorf("marshaling: %w", err)
 	}
 
 	return data, err
@@ -113,13 +114,13 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON is a custom unmarshaler.
 func (w *Wrapper) UnmarshalJSON(data []byte) error {
 	if len(w.Keys) < 1 {
-		return errors.WithStack(ErrNoKey)
+		return ErrNoKey
 	}
 
 	extW := externalWrapper{}
 	err := json.Unmarshal(data, &extW)
 	if err != nil {
-		return errors.Wrap(err, "unmarshaling")
+		return fmt.Errorf("unmarshaling: %w", err)
 	}
 
 	for _, key := range w.Keys {
@@ -152,14 +153,14 @@ func (w *Wrapper) UnmarshalJSON(data []byte) error {
 
 		err = json.Unmarshal(intW.Payload, &junkW)
 		if err != nil {
-			return errors.Wrap(err, "unmarshaling wrapper")
+			return fmt.Errorf("unmarshaling wrapper: %w", err)
 		}
 
 		w.Payload = junkW.Payload
 		return nil
 	}
 
-	return errors.WithStack(ErrUndecryptable)
+	return ErrUndecryptable
 }
 
 func compress(data []byte) ([]byte, error) {
@@ -169,12 +170,12 @@ func compress(data []byte) ([]byte, error) {
 
 	_, err := compressor.Write(data)
 	if err != nil {
-		return nil, errors.Wrap(err, "compressing")
+		return nil, fmt.Errorf("compressing: %w", err)
 	}
 
 	err = compressor.Close()
 	if err != nil {
-		return nil, errors.Wrap(err, "compressing")
+		return nil, fmt.Errorf("compressing: %w", err)
 	}
 
 	return buf.Bytes(), nil
@@ -185,7 +186,7 @@ func decompress(data []byte) ([]byte, error) {
 
 	data, err := ioutil.ReadAll(lz4.NewReader(buf))
 	if err != nil {
-		return nil, errors.Wrap(err, "decompressing")
+		return nil, fmt.Errorf("decompressing: %w", err)
 	}
 
 	return data, nil
