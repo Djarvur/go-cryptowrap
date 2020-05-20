@@ -1,4 +1,4 @@
-# cryptowrap image:https://godoc.org/github.com/Djarvur/go-cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/go-cryptowrap"] image:https://travis-ci.org/Djarvur/go-cryptowrap.svg["Build Status",link="https://travis-ci.org/Djarvur/go-cryptowrap"] image:https://coveralls.io/repos/Djarvur/go-cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/go-cryptowrap?branch=master"]
+# cryptowrap image:https://godoc.org/github.com/Djarvur/go-cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/go-cryptowrap"] image:https://github.com/Djarvur/go-cryptowrap/workflows/Test/badge.svg?branch=master["Build Status"] image:https://coveralls.io/repos/Djarvur/go-cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/go-cryptowrap?branch=master"]
 
 JSON/Gob/MsgPack-based Marshaler/Unmarshaler with AES encryption
 
