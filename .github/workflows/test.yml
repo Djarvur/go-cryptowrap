@@ -1,4 +1,9 @@
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
 name: Test
 jobs:
   lint:
@@ -23,4 +28,8 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
       - name: go test
-        run: go test -v -race ./...
+        run: go test -v -race -coverprofile=profile.cov ./...
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
