@@ -1,3 +1,4 @@
+// Package cryptowrap JSON/Gob/MsgPack-based Marshaler/Unmarshaler with AES encryption
 package cryptowrap
 
 import (
@@ -118,6 +119,7 @@ func (w *Wrapper) marshal(marshaler func(interface{}) ([]byte, error)) ([]byte, 
 		if err != nil {
 			return nil, err
 		}
+
 		intW.Compressed = true
 	}
 
@@ -127,6 +129,7 @@ func (w *Wrapper) marshal(marshaler func(interface{}) ([]byte, error)) ([]byte, 
 	if err != nil {
 		return nil, fmt.Errorf("marshaling payload wrapper: %w", err)
 	}
+
 	extW.IV = w.IV
 
 	extW.Payload, err = aescrypt.EncryptAESCBCPadded(extW.Payload, w.Keys[0], w.IV)
@@ -148,6 +151,7 @@ func (w *Wrapper) unmarshal(data []byte, unmarshaler func([]byte, interface{}) e
 	}
 
 	extW := externalWrapper{}
+
 	err := unmarshaler(data, &extW)
 	if err != nil {
 		return fmt.Errorf("unmarshaling: %w", err)
@@ -160,6 +164,7 @@ func (w *Wrapper) unmarshal(data []byte, unmarshaler func([]byte, interface{}) e
 		}
 
 		intW := internalWrapper{}
+
 		err = unmarshaler(data, &intW)
 		if err != nil {
 			continue
@@ -187,6 +192,7 @@ func (w *Wrapper) unmarshal(data []byte, unmarshaler func([]byte, interface{}) e
 		}
 
 		w.Payload = junkW.Payload
+
 		return nil
 	}
 
