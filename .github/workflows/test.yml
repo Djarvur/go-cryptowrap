@@ -1,6 +1,14 @@
-on: [push, pull_request]
+on: [pull_request]
 name: Test
 jobs:
+  lint:
+    name: runner / golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1
   test:
     strategy:
       matrix:
@@ -12,11 +20,7 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Checkout code
+      - name: Check out
         uses: actions/checkout@v2
-      - name: Lint
-        uses: actions-contrib/golangci-lint@v1
-        with:
-          golangci_lint_version: "1.27"
-      - name: Test
-        run: go test ./...
+      - name: go test
+        run: go test -v -race ./...
