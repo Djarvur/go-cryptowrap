@@ -3,6 +3,7 @@ package cryptowrap
 import (
 	"bytes"
 	"crypto/aes"
+	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	aescrypt "github.com/Djarvur/go-aescrypt"
 	"github.com/pierrec/lz4"
+	"github.com/ugorji/go/codec"
 )
 
 // Errors might be returned. They will be wrapped with stacktrace at least, of course.
@@ -59,6 +61,35 @@ type junkWrapper struct {
 
 // MarshalJSON is a custom marshaler.
 func (w *Wrapper) MarshalJSON() ([]byte, error) {
+	return w.marshal(json.Marshal)
+}
+
+// UnmarshalJSON is a custom unmarshaler.
+func (w *Wrapper) UnmarshalJSON(data []byte) error {
+	return w.unmarshal(data, json.Unmarshal)
+}
+
+// GobEncode is a custom marshaler.
+func (w *Wrapper) GobEncode() ([]byte, error) {
+	return w.marshal(gobMarshal)
+}
+
+// GobDecode is a custom unmarshaler.
+func (w *Wrapper) GobDecode(data []byte) error {
+	return w.unmarshal(data, gobUnmarshal)
+}
+
+// MarshalBinary is a custom marshaler to be used with MsgPack (github.com/ugorji/go/codec).
+func (w *Wrapper) MarshalBinary() (data []byte, err error) {
+	return w.marshal(binMarshal)
+}
+
+// UnmarshalBinary is a custom unmarshaler to be used with MsgPack (github.com/ugorji/go/codec).
+func (w *Wrapper) UnmarshalBinary(data []byte) error {
+	return w.unmarshal(data, binUnmarshal)
+}
+
+func (w *Wrapper) marshal(marshaler func(interface{}) ([]byte, error)) ([]byte, error) {
 	if len(w.Keys) < 1 {
 		return nil, ErrNoKey
 	}
@@ -77,7 +108,7 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	junkW.Payload = w.Payload
 	junkW.Junk = randBytes(len(w.Keys[0]))
 
-	intW.Payload, err = json.Marshal(&junkW)
+	intW.Payload, err = marshaler(&junkW)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling payload: %w", err)
 	}
@@ -92,7 +123,7 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 
 	intW.Checksum = crc32.ChecksumIEEE(intW.Payload)
 
-	extW.Payload, err = json.Marshal(&intW)
+	extW.Payload, err = marshaler(&intW)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling payload wrapper: %w", err)
 	}
@@ -103,7 +134,7 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("encrypting: %w", err)
 	}
 
-	data, err := json.Marshal(&extW)
+	data, err := marshaler(&extW)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling: %w", err)
 	}
@@ -111,14 +142,13 @@ func (w *Wrapper) MarshalJSON() ([]byte, error) {
 	return data, err
 }
 
-// UnmarshalJSON is a custom unmarshaler.
-func (w *Wrapper) UnmarshalJSON(data []byte) error {
+func (w *Wrapper) unmarshal(data []byte, unmarshaler func([]byte, interface{}) error) error {
 	if len(w.Keys) < 1 {
 		return ErrNoKey
 	}
 
 	extW := externalWrapper{}
-	err := json.Unmarshal(data, &extW)
+	err := unmarshaler(data, &extW)
 	if err != nil {
 		return fmt.Errorf("unmarshaling: %w", err)
 	}
@@ -130,7 +160,7 @@ func (w *Wrapper) UnmarshalJSON(data []byte) error {
 		}
 
 		intW := internalWrapper{}
-		err = json.Unmarshal(data, &intW)
+		err = unmarshaler(data, &intW)
 		if err != nil {
 			continue
 		}
@@ -151,7 +181,7 @@ func (w *Wrapper) UnmarshalJSON(data []byte) error {
 			Payload: w.Payload,
 		}
 
-		err = json.Unmarshal(intW.Payload, &junkW)
+		err = unmarshaler(intW.Payload, &junkW)
 		if err != nil {
 			return fmt.Errorf("unmarshaling wrapper: %w", err)
 		}
@@ -190,4 +220,32 @@ func decompress(data []byte) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func gobMarshal(e interface{}) ([]byte, error) {
+	var b bytes.Buffer
+
+	if err := gob.NewEncoder(&b).Encode(e); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func gobUnmarshal(data []byte, e interface{}) error {
+	return gob.NewDecoder(bytes.NewBuffer(data)).Decode(e)
+}
+
+func binMarshal(e interface{}) ([]byte, error) {
+	var b bytes.Buffer
+
+	if err := codec.NewEncoder(&b, new(codec.MsgpackHandle)).Encode(e); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func binUnmarshal(data []byte, e interface{}) error {
+	return codec.NewDecoderBytes(data, new(codec.MsgpackHandle)).Decode(e)
 }

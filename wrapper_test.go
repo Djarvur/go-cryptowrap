@@ -1,11 +1,14 @@
 package cryptowrap_test
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"reflect"
 	"testing"
 
 	"github.com/Djarvur/cryptowrap"
+	"github.com/ugorji/go/codec"
 )
 
 type TestData struct {
@@ -14,23 +17,65 @@ type TestData struct {
 	Field3 string
 }
 
-func TestWrapper128(t *testing.T) {
-	testWrapper(t, 16, false)
+func init() {
+	gob.Register(&TestData{})
 }
 
-func TestWrapper256(t *testing.T) {
-	testWrapper(t, 32, false)
+func TestWrapperJSON128(t *testing.T) {
+	testWrapper(t, 16, false, json.Marshal, json.Unmarshal)
 }
 
-func TestWrapper128Compress(t *testing.T) {
-	testWrapper(t, 16, true)
+func TestWrapperJSON256(t *testing.T) {
+	testWrapper(t, 32, false, json.Marshal, json.Unmarshal)
 }
 
-func TestWrapper256Compress(t *testing.T) {
-	testWrapper(t, 32, true)
+func TestWrapperJSON128Compress(t *testing.T) {
+	testWrapper(t, 16, true, json.Marshal, json.Unmarshal)
 }
 
-func testWrapper(t *testing.T, keyLen int, compress bool) {
+func TestWrapperJSON256Compress(t *testing.T) {
+	testWrapper(t, 32, true, json.Marshal, json.Unmarshal)
+}
+
+func TestWrapperGob128(t *testing.T) {
+	testWrapper(t, 16, false, gobMarshal, gobUnmarshal)
+}
+
+func TestWrapperGob256(t *testing.T) {
+	testWrapper(t, 32, false, gobMarshal, gobUnmarshal)
+}
+
+func TestWrapperGob128Compress(t *testing.T) {
+	testWrapper(t, 16, true, gobMarshal, gobUnmarshal)
+}
+
+func TestWrapperGob256Compress(t *testing.T) {
+	testWrapper(t, 32, true, gobMarshal, gobUnmarshal)
+}
+
+func TestWrapperMsgp128(t *testing.T) {
+	testWrapper(t, 16, false, binMarshal, binUnmarshal)
+}
+
+func TestWrapperMsgp256(t *testing.T) {
+	testWrapper(t, 32, false, binMarshal, binUnmarshal)
+}
+
+func TestWrapperMsgp128Compress(t *testing.T) {
+	testWrapper(t, 16, true, binMarshal, binUnmarshal)
+}
+
+func TestWrapperMsgp256Compress(t *testing.T) {
+	testWrapper(t, 32, true, binMarshal, binUnmarshal)
+}
+
+func testWrapper(
+	t *testing.T,
+	keyLen int,
+	compress bool,
+	marshaler func(interface{}) ([]byte, error),
+	unmarshaler func([]byte, interface{}) error,
+) {
 	keys := [][]byte{
 		randBytes(keyLen),
 		randBytes(keyLen),
@@ -48,7 +93,7 @@ func testWrapper(t *testing.T, keyLen int, compress bool) {
 		Compress: compress,
 	}
 
-	data, err := json.Marshal(&src)
+	data, err := marshaler(&src)
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,7 +103,7 @@ func testWrapper(t *testing.T, keyLen int, compress bool) {
 		Payload: &TestData{},
 	}
 
-	err = json.Unmarshal(data, &dst)
+	err = unmarshaler(data, &dst)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,7 +117,7 @@ func testWrapper(t *testing.T, keyLen int, compress bool) {
 		Payload: &TestData{},
 	}
 
-	err = json.Unmarshal(data, &dst)
+	err = unmarshaler(data, &dst)
 	if err != nil {
 		t.Error(err)
 	}
@@ -86,7 +131,7 @@ func testWrapper(t *testing.T, keyLen int, compress bool) {
 		Payload: &TestData{},
 	}
 
-	err = json.Unmarshal(data, &dst)
+	err = unmarshaler(data, &dst)
 	if err != nil {
 		t.Error(err)
 	}
@@ -96,7 +141,23 @@ func testWrapper(t *testing.T, keyLen int, compress bool) {
 	}
 }
 
-func TestWrapperNegative(t *testing.T) {
+func TestWrapperJSONNegative(t *testing.T) {
+	testWrapperNegative(t, json.Marshal, json.Unmarshal)
+}
+
+func TestWrapperGobNegative(t *testing.T) {
+	testWrapperNegative(t, gobMarshal, gobUnmarshal)
+}
+
+func TestWrapperMsgpNegative(t *testing.T) {
+	testWrapperNegative(t, binMarshal, binUnmarshal)
+}
+
+func testWrapperNegative(
+	t *testing.T,
+	marshaler func(interface{}) ([]byte, error),
+	unmarshaler func([]byte, interface{}) error,
+) {
 	keys := [][]byte{
 		randBytes(16),
 		randBytes(16),
@@ -113,41 +174,41 @@ func TestWrapperNegative(t *testing.T) {
 		Payload: &orig,
 	}
 
-	data, err := json.Marshal(&src)
+	data, err := marshaler(&src)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = json.Unmarshal(data, &cryptowrap.Wrapper{Keys: keys[:1]})
+	err = unmarshaler(data, &cryptowrap.Wrapper{Keys: keys[:1]})
 	if err == nil {
 		t.Error("decrypted undecryptable")
 	}
 
-	err = json.Unmarshal(data, &cryptowrap.Wrapper{Payload: &TestData{}})
+	err = unmarshaler(data, &cryptowrap.Wrapper{Payload: &TestData{}})
 	if err == nil {
 		t.Error("decrypted undecryptable")
 	}
 
 	badKey := [][]byte{randBytes(15)}
 
-	err = json.Unmarshal(data, &cryptowrap.Wrapper{Keys: badKey})
+	err = unmarshaler(data, &cryptowrap.Wrapper{Keys: badKey})
 	if err == nil {
 		t.Error("decrypted undecryptable")
 	}
 
-	_, err = json.Marshal(&cryptowrap.Wrapper{Keys: badKey, Payload: &orig})
+	_, err = marshaler(&cryptowrap.Wrapper{Keys: badKey, Payload: &orig})
 	if err == nil {
 		t.Error("encrypted unencryptable")
 	}
 
-	_, err = json.Marshal(&cryptowrap.Wrapper{Payload: &orig})
+	_, err = marshaler(&cryptowrap.Wrapper{Payload: &orig})
 	if err == nil {
 		t.Error("encrypted unencryptable")
 	}
 
 	data[len(data)/2] = 0
 
-	err = json.Unmarshal(
+	err = unmarshaler(
 		data,
 		&cryptowrap.Wrapper{
 			Keys: keys,
@@ -157,4 +218,32 @@ func TestWrapperNegative(t *testing.T) {
 		t.Error("decrypted undecryptable")
 	}
 
+}
+
+func gobMarshal(e interface{}) ([]byte, error) {
+	var b bytes.Buffer
+
+	if err := gob.NewEncoder(&b).Encode(e); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func gobUnmarshal(data []byte, e interface{}) error {
+	return gob.NewDecoder(bytes.NewBuffer(data)).Decode(e)
+}
+
+func binMarshal(e interface{}) ([]byte, error) {
+	var b bytes.Buffer
+
+	if err := codec.NewEncoder(&b, new(codec.MsgpackHandle)).Encode(e); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func binUnmarshal(data []byte, e interface{}) error {
+	return codec.NewDecoderBytes(data, new(codec.MsgpackHandle)).Decode(e)
 }
