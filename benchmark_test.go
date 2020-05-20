@@ -1,13 +1,30 @@
 package cryptowrap_test
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"testing"
 
 	"github.com/Djarvur/cryptowrap"
 )
 
-func BenchmarkRaw(b *testing.B) {
+func BenchmarkRawJSON(b *testing.B) {
+	benchmarkRaw(b, json.Marshal, json.Unmarshal)
+}
+
+func BenchmarkRawGob(b *testing.B) {
+	benchmarkRaw(b, gobMarshal, gobUnmarshal)
+}
+
+func BenchmarkRawMsgp(b *testing.B) {
+	benchmarkRaw(b, binMarshal, binUnmarshal)
+}
+
+func benchmarkRaw(
+	b *testing.B,
+	marshaler func(interface{}) ([]byte, error),
+	unmarshaler func([]byte, interface{}) error,
+) {
 	type rawWrapper struct {
 		Payload interface{}
 	}
@@ -17,12 +34,16 @@ func BenchmarkRaw(b *testing.B) {
 		Secure   rawWrapper
 	}
 
-	type toPassSecure struct {
+	type toPassRaw struct {
 		Field string
 	}
 
+	gob.Register(&toPassRaw{})
+
+	b.StartTimer()
+
 	for i := 0; i < b.N; i++ {
-		srcSecure := toPassSecure{"world!"}
+		srcSecure := toPassRaw{"world!"}
 
 		src := toPass{
 			Insecure: "hello",
@@ -31,12 +52,12 @@ func BenchmarkRaw(b *testing.B) {
 			},
 		}
 
-		data, err := json.Marshal(&src)
+		data, err := marshaler(&src)
 		if err != nil {
 			panic(err)
 		}
 
-		var dstSecure toPassSecure
+		var dstSecure toPassRaw
 
 		dst := toPass{
 			Secure: rawWrapper{
@@ -44,30 +65,68 @@ func BenchmarkRaw(b *testing.B) {
 			},
 		}
 
-		err = json.Unmarshal(data, &dst)
+		err = unmarshaler(data, &dst)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func BenchmarkWrapper128(b *testing.B) {
-	benchmarkWrapper(b, 16, false)
+func BenchmarkWrapperJSON128(b *testing.B) {
+	benchmarkWrapper(b, 16, false, json.Marshal, json.Unmarshal)
 }
 
-func BenchmarkWrapper256(b *testing.B) {
-	benchmarkWrapper(b, 32, false)
+func BenchmarkWrapperJSON256(b *testing.B) {
+	benchmarkWrapper(b, 32, false, json.Marshal, json.Unmarshal)
 }
 
-func BenchmarkWrapper128Compress(b *testing.B) {
-	benchmarkWrapper(b, 16, true)
+func BenchmarkWrapperJSON128Compress(b *testing.B) {
+	benchmarkWrapper(b, 16, true, json.Marshal, json.Unmarshal)
 }
 
-func BenchmarkWrapper256Compress(b *testing.B) {
-	benchmarkWrapper(b, 32, true)
+func BenchmarkWrapperJSON256Compress(b *testing.B) {
+	benchmarkWrapper(b, 32, true, json.Marshal, json.Unmarshal)
 }
 
-func benchmarkWrapper(b *testing.B, keyLen int, compress bool) {
+func BenchmarkWrapperGob128(b *testing.B) {
+	benchmarkWrapper(b, 16, false, gobMarshal, gobUnmarshal)
+}
+
+func BenchmarkWrapperGob256(b *testing.B) {
+	benchmarkWrapper(b, 32, false, gobMarshal, gobUnmarshal)
+}
+
+func BenchmarkWrapperGob128Compress(b *testing.B) {
+	benchmarkWrapper(b, 16, true, gobMarshal, gobUnmarshal)
+}
+
+func BenchmarkWrapperGob256Compress(b *testing.B) {
+	benchmarkWrapper(b, 32, true, gobMarshal, gobUnmarshal)
+}
+
+func BenchmarkWrapperMsgp128(b *testing.B) {
+	benchmarkWrapper(b, 16, false, binMarshal, binUnmarshal)
+}
+
+func BenchmarkWrapperMsgp256(b *testing.B) {
+	benchmarkWrapper(b, 32, false, binMarshal, binUnmarshal)
+}
+
+func BenchmarkWrapperMsgp128Compress(b *testing.B) {
+	benchmarkWrapper(b, 16, true, binMarshal, binUnmarshal)
+}
+
+func BenchmarkWrapperMsgp256Compress(b *testing.B) {
+	benchmarkWrapper(b, 32, true, binMarshal, binUnmarshal)
+}
+
+func benchmarkWrapper(
+	b *testing.B,
+	keyLen int,
+	compress bool,
+	marshaler func(interface{}) ([]byte, error),
+	unmarshaler func([]byte, interface{}) error,
+) {
 	b.StopTimer()
 
 	type toPass struct {
@@ -78,6 +137,8 @@ func benchmarkWrapper(b *testing.B, keyLen int, compress bool) {
 	type toPassSecure struct {
 		Field string
 	}
+
+	gob.Register(&toPassSecure{})
 
 	key := randBytes(keyLen)
 
@@ -95,7 +156,7 @@ func benchmarkWrapper(b *testing.B, keyLen int, compress bool) {
 			},
 		}
 
-		data, err := json.Marshal(&src)
+		data, err := marshaler(&src)
 		if err != nil {
 			panic(err)
 		}
@@ -109,7 +170,7 @@ func benchmarkWrapper(b *testing.B, keyLen int, compress bool) {
 			},
 		}
 
-		err = json.Unmarshal(data, &dst)
+		err = unmarshaler(data, &dst)
 		if err != nil {
 			panic(err)
 		}

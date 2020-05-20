@@ -1,6 +1,6 @@
 # cryptowrap image:https://godoc.org/github.com/Djarvur/go-cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/go-cryptowrap"] image:https://travis-ci.org/Djarvur/go-cryptowrap.svg["Build Status",link="https://travis-ci.org/Djarvur/go-cryptowrap"] image:https://coveralls.io/repos/Djarvur/go-cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/go-cryptowrap?branch=master"]
 
-JSON-based Marshaler/Unmarshaler with AES encryption
+JSON/Gob/MsgPack-based Marshaler/Unmarshaler with AES encryption
 
 cryptowrap.Wrapper is a struct with custom JSON marshaler and unmarshaler.
 
@@ -81,11 +81,21 @@ $go test -bench=. -benchmem
 goos: darwin
 goarch: amd64
 pkg: github.com/Djarvur/cryptowrap
-BenchmarkRaw-4                  500000      3073 ns/op        392 B/op   11 allocs/op
-BenchmarkWrapper128-4            50000     22673 ns/op       4202 B/op   58 allocs/op
-BenchmarkWrapper256-4            50000     26089 ns/op       4850 B/op   58 allocs/op
-BenchmarkWrapper128Compress-4     1000   1717042 ns/op   17319552 B/op   77 allocs/op
-BenchmarkWrapper256Compress-4     1000   1750608 ns/op   17320554 B/op   78 allocs/op
+BenchmarkRawJSON-4                  535210      2070 ns/op        520 B/op    14 allocs/op
+BenchmarkRawGob-4                    45284     27297 ns/op      10455 B/op   255 allocs/op
+BenchmarkRawMsgp-4                  272006      3958 ns/op       3728 B/op    41 allocs/op
+BenchmarkWrapperJSON128-4            74348     15555 ns/op       4194 B/op    59 allocs/op
+BenchmarkWrapperJSON256-4            66972     17839 ns/op       4834 B/op    59 allocs/op
+BenchmarkWrapperJSON128Compress-4      777   1423461 ns/op   17318819 B/op    79 allocs/op
+BenchmarkWrapperJSON256Compress-4      729   1508109 ns/op   17319469 B/op    79 allocs/op
+BenchmarkWrapperGob128-4             10000    108758 ns/op      39948 B/op   890 allocs/op
+BenchmarkWrapperGob256-4             10000    100913 ns/op      40444 B/op   890 allocs/op
+BenchmarkWrapperGob128Compress-4       716   1673315 ns/op   17353052 B/op   902 allocs/op
+BenchmarkWrapperGob256Compress-4       740   1659393 ns/op   17353589 B/op   902 allocs/op
+BenchmarkWrapperMsgp128-4            71518     16779 ns/op      15472 B/op   151 allocs/op
+BenchmarkWrapperMsgp256-4            69636     17408 ns/op      15904 B/op   151 allocs/op
+BenchmarkWrapperMsgp128Compress-4      771   1549084 ns/op   17327702 B/op   160 allocs/op
+BenchmarkWrapperMsgp256Compress-4      820   1548949 ns/op   17328341 B/op   161 allocs/op
 PASS
-ok  	github.com/Djarvur/cryptowrap	8.442s
+ok  	github.com/Djarvur/cryptowrap	19.441s
 ```
