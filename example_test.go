@@ -2,6 +2,8 @@ package cryptowrap_test
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
@@ -192,4 +194,52 @@ func Example_msgpack() {
 
 	fmt.Printf("%v\n", dst.Secure.Payload.(*toPassSecure).Field)
 	// Output: hello world!
+}
+
+func Example_rsa() {
+	type toPass struct {
+		Insecure string
+		Secure   cryptowrap.WrapperRSA
+	}
+
+	type toPassSecure struct {
+		Field string
+	}
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		panic(err)
+	}
+
+	srcSecure := toPassSecure{"world!"}
+
+	src := toPass{
+		Insecure: "hello",
+		Secure: cryptowrap.WrapperRSA{
+			EncKey:  &key.PublicKey,
+			Payload: &srcSecure,
+		},
+	}
+
+	data, err := json.Marshal(&src)
+	if err != nil {
+		panic(err)
+	}
+
+	var dstSecure toPassSecure
+
+	dst := toPass{
+		Secure: cryptowrap.WrapperRSA{
+			DecKeys: []*rsa.PrivateKey{key},
+			Payload: &dstSecure,
+		},
+	}
+
+	err = json.Unmarshal(data, &dst)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%v\n", dst.Secure.Payload.(*toPassSecure).Field)
+	// Output: world!
 }
