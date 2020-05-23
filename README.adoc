@@ -1,6 +1,6 @@
 # cryptowrap image:https://godoc.org/github.com/Djarvur/go-cryptowrap?status.svg["GoDoc",link="http://godoc.org/github.com/Djarvur/go-cryptowrap"] image:https://github.com/Djarvur/go-cryptowrap/workflows/Test/badge.svg?branch=master["Build Status"] image:https://coveralls.io/repos/Djarvur/go-cryptowrap/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/Djarvur/go-cryptowrap?branch=master"]
 
-JSON/Gob/MsgPack-based Marshaler/Unmarshaler with AES encryption
+JSON/Gob/MsgPack-based Marshaler/Unmarshaler with AES/RSA encryption
 
 cryptowrap.Wrapper is a struct with custom JSON/Gob/Binary marshaler and unmarshaler.
 
@@ -14,6 +14,12 @@ Serialised data are protected by checksum.
 
 Unmarshaler will decrypt Payload with the Keys provided.
 Keys will be tryied one by one until success decryption. Success means checksum check satisfied.
+ErrUndecryptable will be returned in case no one key is suitable.
+
+RSA Marshaler will encrypt Payload with RSA using public key provided as a key using RSA-OAEP.
+
+RSA Unmarshaler will decrypt Payload with the private keys provided.
+Keys will be tryied one by one until success decryption.
 ErrUndecryptable will be returned in case no one key is suitable.
 
 ## Example
@@ -81,21 +87,31 @@ $go test -bench=. -benchmem
 goos: darwin
 goarch: amd64
 pkg: github.com/Djarvur/cryptowrap
-BenchmarkRawJSON-4                  535210      2070 ns/op        520 B/op    14 allocs/op
-BenchmarkRawGob-4                    45284     27297 ns/op      10455 B/op   255 allocs/op
-BenchmarkRawMsgp-4                  272006      3958 ns/op       3728 B/op    41 allocs/op
-BenchmarkWrapperJSON128-4            74348     15555 ns/op       4194 B/op    59 allocs/op
-BenchmarkWrapperJSON256-4            66972     17839 ns/op       4834 B/op    59 allocs/op
-BenchmarkWrapperJSON128Compress-4      777   1423461 ns/op   17318819 B/op    79 allocs/op
-BenchmarkWrapperJSON256Compress-4      729   1508109 ns/op   17319469 B/op    79 allocs/op
-BenchmarkWrapperGob128-4             10000    108758 ns/op      39948 B/op   890 allocs/op
-BenchmarkWrapperGob256-4             10000    100913 ns/op      40444 B/op   890 allocs/op
-BenchmarkWrapperGob128Compress-4       716   1673315 ns/op   17353052 B/op   902 allocs/op
-BenchmarkWrapperGob256Compress-4       740   1659393 ns/op   17353589 B/op   902 allocs/op
-BenchmarkWrapperMsgp128-4            71518     16779 ns/op      15472 B/op   151 allocs/op
-BenchmarkWrapperMsgp256-4            69636     17408 ns/op      15904 B/op   151 allocs/op
-BenchmarkWrapperMsgp128Compress-4      771   1549084 ns/op   17327702 B/op   160 allocs/op
-BenchmarkWrapperMsgp256Compress-4      820   1548949 ns/op   17328341 B/op   161 allocs/op
+BenchmarkRawJSON-4                     485701       2338 ns/op        520 B/op     14 allocs/op
+BenchmarkRawGob-4                       39633      40585 ns/op      10455 B/op    255 allocs/op
+BenchmarkRawMsgp-4                     273661       4983 ns/op       3728 B/op     41 allocs/op
+BenchmarkWrapperJSON128-4               67701      16755 ns/op       4194 B/op     59 allocs/op
+BenchmarkWrapperJSON256-4               67858      18140 ns/op       4834 B/op     59 allocs/op
+BenchmarkWrapperJSON128Compress-4        1215     889562 ns/op   10704018 B/op     76 allocs/op
+BenchmarkWrapperJSON256Compress-4        1456     916625 ns/op   10900791 B/op     76 allocs/op
+BenchmarkWrapperGob128-4                10000     104950 ns/op      39948 B/op    890 allocs/op
+BenchmarkWrapperGob256-4                10660     109298 ns/op      40444 B/op    890 allocs/op
+BenchmarkWrapperGob128Compress-4         1174    1049825 ns/op   11165423 B/op    903 allocs/op
+BenchmarkWrapperGob256Compress-4         1076    1120460 ns/op   11241674 B/op    903 allocs/op
+BenchmarkWrapperMsgp128-4               64138      17068 ns/op      15472 B/op    151 allocs/op
+BenchmarkWrapperMsgp256-4               63519      18474 ns/op      15904 B/op    151 allocs/op
+BenchmarkWrapperMsgp128Compress-4        1124     949707 ns/op   11163512 B/op    161 allocs/op
+BenchmarkWrapperMsgp256Compress-4        1190     998931 ns/op   11294580 B/op    162 allocs/op
+BenchmarkWrapperRSAJSON2048-4             753    1612366 ns/op      34908 B/op    160 allocs/op
+BenchmarkWrapperRSAJSON4096-4             123    9537172 ns/op      82904 B/op    175 allocs/op
+BenchmarkWrapperRSAJSON2048Compress-4     440    2736445 ns/op   10905212 B/op    180 allocs/op
+BenchmarkWrapperRSAJSON4096Compress-4     100   10528565 ns/op   11106407 B/op    194 allocs/op
+BenchmarkWrapperRSAGob4096-4              121    9742681 ns/op     123466 B/op   1081 allocs/op
+BenchmarkWrapperRSAGob4096Compress-4      100   10695575 ns/op   11649910 B/op   1098 allocs/op
+BenchmarkWrapperRSAMsgp2048-4             742    1705802 ns/op      45843 B/op    246 allocs/op
+BenchmarkWrapperRSAMsgp4096-4             121    9712414 ns/op      93347 B/op    260 allocs/op
+BenchmarkWrapperRSAMsgp2048Compress-4     367    2806277 ns/op   11644800 B/op    261 allocs/op
+BenchmarkWrapperRSAMsgp4096Compress-4     100   10353704 ns/op   12122667 B/op    276 allocs/op
 PASS
-ok  	github.com/Djarvur/cryptowrap	19.441s
+ok  	github.com/Djarvur/cryptowrap	39.306s
 ```

@@ -22,7 +22,7 @@ var (
 	ErrNoKey         = errors.New("key has to be provided")
 )
 
-// Wrapper is a struct with custom JSON marshaler and unmarshaler.
+// Wrapper is a struct with custom JSON/Gob/Binary marshaler and unmarshaler.
 //
 // Marshaler will encrypt Payload with AES using first value from Keys as a key
 // and provided IV as an initialisation vector.

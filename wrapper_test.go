@@ -206,7 +206,7 @@ func testWrapperNegative(
 		t.Error("encrypted unencryptable")
 	}
 
-	data[len(data)/2] = 0
+	data[len(data)/2] = ^data[len(data)/2]
 
 	err = unmarshaler(
 		data,
