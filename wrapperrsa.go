@@ -27,7 +27,7 @@ import (
 //
 // If Compress is true serialized Payload wil be compressed with LZ4.
 //
-// Note: there is a limit for the lenght of data could be encrypted with RSA:
+// Note: there is a limit for the length of data could be encrypted with RSA:
 // The message must be no longer than the length of the public modulus minus twice the hash length, minus a further 2.
 // See https://golang.org/pkg/crypto/rsa/#EncryptOAEP for details (there no much though).
 type WrapperRSA struct {
@@ -83,7 +83,7 @@ func (w *WrapperRSA) UnmarshalBinary(data []byte) error {
 	return w.unmarshal(data, binUnmarshal)
 }
 
-var emptyLabel = []byte("")
+var emptyLabel = []byte("") // nolint: gochecknoglobals
 
 func (w *WrapperRSA) marshal(marshaler func(interface{}) ([]byte, error)) ([]byte, error) {
 	var (
@@ -137,7 +137,7 @@ func (w *WrapperRSA) marshal(marshaler func(interface{}) ([]byte, error)) ([]byt
 	return data, err
 }
 
-func (w *WrapperRSA) unmarshal(data []byte, unmarshaler func([]byte, interface{}) error) error {
+func (w *WrapperRSA) unmarshal(data []byte, unmarshaler func([]byte, interface{}) error) error { // nolint: gocyclo
 	if len(w.DecKeys) < 1 {
 		return ErrNoKey
 	}

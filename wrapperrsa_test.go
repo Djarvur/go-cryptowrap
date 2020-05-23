@@ -80,6 +80,8 @@ func testWrapperRSA(
 ) {
 	initKeys.Do(testKeysInit)
 
+	label := []byte("test label")
+
 	orig := TestData{
 		Field1: "Field1",
 		Field2: "Field2",
@@ -88,6 +90,7 @@ func testWrapperRSA(
 
 	src := cryptowrap.WrapperRSA{
 		EncKey:   &keys[len(keys)-1].PublicKey,
+		Label:    label,
 		Payload:  &orig,
 		Compress: compress,
 	}
@@ -99,6 +102,7 @@ func testWrapperRSA(
 
 	dst := cryptowrap.WrapperRSA{
 		DecKeys: keys,
+		Label:   label,
 		Payload: &TestData{},
 	}
 
@@ -113,6 +117,7 @@ func testWrapperRSA(
 
 	dst = cryptowrap.WrapperRSA{
 		DecKeys: []*rsa.PrivateKey{keys[1], keys[0]},
+		Label:   label,
 		Payload: &TestData{},
 	}
 
@@ -127,6 +132,7 @@ func testWrapperRSA(
 
 	dst = cryptowrap.WrapperRSA{
 		DecKeys: keys,
+		Label:   label,
 		Payload: &TestData{},
 	}
 
@@ -199,7 +205,7 @@ func testWrapperRSANegative(
 		t.Error("encrypted unencryptable")
 	}
 
-	data[len(data)/2] = 0
+	data[len(data)/2] = ^data[len(data)/2]
 
 	err = unmarshaler(
 		data,
@@ -211,4 +217,31 @@ func testWrapperRSANegative(
 		t.Error("decrypted undecryptable")
 	}
 
+	label := []byte("test label")
+
+	src = cryptowrap.WrapperRSA{
+		EncKey:  &keys[1].PublicKey,
+		Label:   label,
+		Payload: &orig,
+	}
+
+	data, err = marshaler(&src)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = unmarshaler(data, &cryptowrap.WrapperRSA{DecKeys: keys, Payload: &orig, Label: label})
+	if err != nil {
+		t.Error("undecrypted decryptable")
+	}
+
+	err = unmarshaler(data, &cryptowrap.WrapperRSA{DecKeys: keys, Payload: &orig})
+	if err == nil {
+		t.Error("decrypted undecryptable")
+	}
+
+	err = unmarshaler(data, &cryptowrap.WrapperRSA{DecKeys: keys, Payload: &orig, Label: []byte("test label!")})
+	if err == nil {
+		t.Error("decrypted undecryptable")
+	}
 }
