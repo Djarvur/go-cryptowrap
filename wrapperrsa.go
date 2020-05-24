@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash"
-	"hash/crc32"
 )
 
 // WrapperRSA is a struct with custom JSON/Gob/Binary marshaler and unmarshaler.
@@ -17,10 +16,8 @@ import (
 // and hash function provided in Hash.
 // sha256.New() will be used if no Hash provided.
 //
-// Serialised data are protected by checksum.
-//
 // Unmarshaler will decrypt Payload with the DecKeys provided.
-// Keys will be tryied one by one until success decryption. Success means checksum check satisfied.
+// Keys will be tryied one by one until success decryption.
 // ErrUndecryptable will be returned in case no one key is suitable.
 //
 // Label must be the same for Marshaling and Umarshaling. If no label provided empty one is used.
@@ -45,12 +42,7 @@ type externalWrapperRSA struct {
 
 type internalWrapperRSA struct {
 	Compressed bool
-	Checksum   uint32
 	Payload    []byte
-}
-
-type junkWrapperRSA struct {
-	Payload interface{}
 }
 
 // MarshalJSON is a custom marshaler.
@@ -87,10 +79,9 @@ var emptyLabel = []byte("") // nolint: gochecknoglobals
 
 func (w *WrapperRSA) marshal(marshaler func(interface{}) ([]byte, error)) ([]byte, error) {
 	var (
-		intW  internalWrapperRSA
-		junkW junkWrapperRSA
-		extW  externalWrapperRSA
-		err   error
+		intW internalWrapperRSA
+		extW externalWrapperRSA
+		err  error
 	)
 
 	if w.Hash == nil {
@@ -101,9 +92,7 @@ func (w *WrapperRSA) marshal(marshaler func(interface{}) ([]byte, error)) ([]byt
 		w.Label = emptyLabel
 	}
 
-	junkW.Payload = w.Payload
-
-	intW.Payload, err = marshaler(&junkW)
+	intW.Payload, err = marshaler(w.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling payload: %w", err)
 	}
@@ -116,8 +105,6 @@ func (w *WrapperRSA) marshal(marshaler func(interface{}) ([]byte, error)) ([]byt
 
 		intW.Compressed = true
 	}
-
-	intW.Checksum = crc32.ChecksumIEEE(intW.Payload)
 
 	extW.Payload, err = marshaler(&intW)
 	if err != nil {
@@ -170,11 +157,6 @@ func (w *WrapperRSA) unmarshal(data []byte, unmarshaler func([]byte, interface{}
 			continue
 		}
 
-		checksum := crc32.ChecksumIEEE(intW.Payload)
-		if checksum != intW.Checksum {
-			continue
-		}
-
 		if intW.Compressed {
 			intW.Payload, err = decompress(intW.Payload)
 			if err != nil {
@@ -182,16 +164,10 @@ func (w *WrapperRSA) unmarshal(data []byte, unmarshaler func([]byte, interface{}
 			}
 		}
 
-		junkW := junkWrapper{
-			Payload: w.Payload,
-		}
-
-		err = unmarshaler(intW.Payload, &junkW)
+		err = unmarshaler(intW.Payload, w.Payload)
 		if err != nil {
 			return fmt.Errorf("unmarshaling wrapper: %w", err)
 		}
-
-		w.Payload = junkW.Payload
 
 		return nil
 	}
