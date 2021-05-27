@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Djarvur/cryptowrap"
+	"github.com/fxamacker/cbor/v2"
 	"github.com/ugorji/go/codec"
 )
 
@@ -67,6 +68,22 @@ func TestWrapperMsgp128Compress(t *testing.T) {
 
 func TestWrapperMsgp256Compress(t *testing.T) {
 	testWrapper(t, 32, true, binMarshal, binUnmarshal)
+}
+
+func TestWrapperCBOR128(t *testing.T) {
+	testWrapper(t, 16, false, cborMarshal, cborUnmarshal)
+}
+
+func TestWrapperCBOR256(t *testing.T) {
+	testWrapper(t, 32, false, cborMarshal, cborUnmarshal)
+}
+
+func TestWrapperCBOR128Compress(t *testing.T) {
+	testWrapper(t, 16, true, cborMarshal, cborUnmarshal)
+}
+
+func TestWrapperCBOR256Compress(t *testing.T) {
+	testWrapper(t, 32, true, cborMarshal, cborUnmarshal)
 }
 
 func testWrapper(
@@ -151,6 +168,10 @@ func TestWrapperGobNegative(t *testing.T) {
 
 func TestWrapperMsgpNegative(t *testing.T) {
 	testWrapperNegative(t, binMarshal, binUnmarshal)
+}
+
+func TestWrapperCBORNegative(t *testing.T) {
+	testWrapperNegative(t, cborMarshal, cborUnmarshal)
 }
 
 func testWrapperNegative(
@@ -246,4 +267,12 @@ func binMarshal(e interface{}) ([]byte, error) {
 
 func binUnmarshal(data []byte, e interface{}) error {
 	return codec.NewDecoderBytes(data, new(codec.MsgpackHandle)).Decode(e)
+}
+
+func cborMarshal(e interface{}) ([]byte, error) {
+	return cbor.Marshal(e)
+}
+
+func cborUnmarshal(data []byte, e interface{}) error {
+	return cbor.Unmarshal(data, e)
 }

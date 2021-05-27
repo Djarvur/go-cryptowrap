@@ -49,6 +49,22 @@ func BenchmarkWrapperRSAMsgp4096Compress(b *testing.B) {
 	benchmarkWrapperRSA(b, testKeys4096, true, binMarshal, binUnmarshal)
 }
 
+func BenchmarkWrapperRSACBOR2048(b *testing.B) {
+	benchmarkWrapperRSA(b, testKeys2048, false, cborMarshal, cborUnmarshal)
+}
+
+func BenchmarkWrapperRSACBOR4096(b *testing.B) {
+	benchmarkWrapperRSA(b, testKeys4096, false, cborMarshal, cborUnmarshal)
+}
+
+func BenchmarkWrapperRSACBOR2048Compress(b *testing.B) {
+	benchmarkWrapperRSA(b, testKeys2048, true, cborMarshal, cborUnmarshal)
+}
+
+func BenchmarkWrapperRSACBOR4096Compress(b *testing.B) {
+	benchmarkWrapperRSA(b, testKeys4096, true, cborMarshal, cborUnmarshal)
+}
+
 func benchmarkWrapperRSA(
 	b *testing.B,
 	keys []*rsa.PrivateKey,
