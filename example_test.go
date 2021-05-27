@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/Djarvur/cryptowrap"
+	"github.com/fxamacker/cbor/v2"
 	"github.com/ugorji/go/codec"
 )
 
@@ -139,6 +140,51 @@ func Example_gob() {
 	}
 
 	err = gob.NewDecoder(bytes.NewBuffer(data)).Decode(&dst)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%v\n", dst.Secure.Payload.(*toPassSecure).Field)
+	// Output: hello world!
+}
+
+func Example_cbor() {
+	type toPass struct {
+		Insecure string
+		Secure   cryptowrap.Wrapper
+	}
+
+	type toPassSecure struct {
+		Field string
+	}
+
+	key := []byte("0123456789ABCDEF")
+
+	srcSecure := toPassSecure{"hello world!"}
+
+	src := toPass{
+		Insecure: "hello",
+		Secure: cryptowrap.Wrapper{
+			Keys:    [][]byte{key},
+			Payload: &srcSecure,
+		},
+	}
+
+	data, err := cbor.Marshal(&src)
+	if err != nil {
+		panic(err)
+	}
+
+	var dstSecure toPassSecure
+
+	dst := toPass{
+		Secure: cryptowrap.Wrapper{
+			Keys:    [][]byte{key},
+			Payload: &dstSecure,
+		},
+	}
+
+	err = cbor.Unmarshal(data, &dst)
 	if err != nil {
 		panic(err)
 	}

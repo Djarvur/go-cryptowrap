@@ -71,6 +71,22 @@ func TestWrapperRSAMsgp4096Compress(t *testing.T) {
 	testWrapperRSA(t, testKeys4096, true, binMarshal, binUnmarshal)
 }
 
+func TestWrapperRSACBOR2048(t *testing.T) {
+	testWrapperRSA(t, testKeys2048, false, cborMarshal, cborUnmarshal)
+}
+
+func TestWrapperRSACBOR4096(t *testing.T) {
+	testWrapperRSA(t, testKeys4096, false, cborMarshal, cborUnmarshal)
+}
+
+func TestWrapperRSACBOR2048Compress(t *testing.T) {
+	testWrapperRSA(t, testKeys2048, true, cborMarshal, cborUnmarshal)
+}
+
+func TestWrapperRSACBOR4096Compress(t *testing.T) {
+	testWrapperRSA(t, testKeys4096, true, cborMarshal, cborUnmarshal)
+}
+
 func testWrapperRSA(
 	t *testing.T,
 	keys []*rsa.PrivateKey,

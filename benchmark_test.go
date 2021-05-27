@@ -20,6 +20,10 @@ func BenchmarkRawMsgp(b *testing.B) {
 	benchmarkRaw(b, binMarshal, binUnmarshal)
 }
 
+func BenchmarkRawCBOR(b *testing.B) {
+	benchmarkRaw(b, cborMarshal, cborUnmarshal)
+}
+
 func benchmarkRaw(
 	b *testing.B,
 	marshaler func(interface{}) ([]byte, error),
@@ -120,6 +124,22 @@ func BenchmarkWrapperMsgp256Compress(b *testing.B) {
 	benchmarkWrapper(b, 32, true, binMarshal, binUnmarshal)
 }
 
+func BenchmarkWrapperCBOR128(b *testing.B) {
+	benchmarkWrapper(b, 16, false, cborMarshal, cborUnmarshal)
+}
+
+func BenchmarkWrapperCBOR256(b *testing.B) {
+	benchmarkWrapper(b, 32, false, cborMarshal, cborUnmarshal)
+}
+
+func BenchmarkWrapperCBOR128Compress(b *testing.B) {
+	benchmarkWrapper(b, 16, true, cborMarshal, cborUnmarshal)
+}
+
+func BenchmarkWrapperCBOR256Compress(b *testing.B) {
+	benchmarkWrapper(b, 32, true, cborMarshal, cborUnmarshal)
+}
+
 func benchmarkWrapper(
 	b *testing.B,
 	keyLen int,
@@ -134,18 +154,18 @@ func benchmarkWrapper(
 		Secure   cryptowrap.Wrapper
 	}
 
-	type toPassSecure struct {
+	type toPassSecureBench struct {
 		Field string
 	}
 
-	gob.Register(&toPassSecure{})
+	gob.Register(&toPassSecureBench{})
 
 	key := randBytes(keyLen)
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		srcSecure := toPassSecure{"world!"}
+		srcSecure := toPassSecureBench{"world!"}
 
 		src := toPass{
 			Insecure: "hello",
@@ -161,7 +181,7 @@ func benchmarkWrapper(
 			panic(err)
 		}
 
-		var dstSecure toPassSecure
+		var dstSecure toPassSecureBench
 
 		dst := toPass{
 			Secure: cryptowrap.Wrapper{
