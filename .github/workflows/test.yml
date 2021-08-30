@@ -30,6 +30,6 @@ jobs:
       - name: go test
         run: go test -v -race -coverprofile=profile.cov ./...
       - name: Send coverage
-        uses: shogo82148/actions-goveralls@v1.4.5
+        uses: shogo82148/actions-goveralls@v1.4.7
         with:
           path-to-profile: profile.cov
