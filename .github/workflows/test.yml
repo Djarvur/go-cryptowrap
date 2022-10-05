@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.1.0
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2.1.3
   test:
@@ -26,7 +26,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Check out
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.1.0
       - name: go test
         run: go test -v -race -coverprofile=profile.cov ./...
       - name: Send coverage
