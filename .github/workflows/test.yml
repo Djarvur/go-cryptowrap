@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v7
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2.2.2
+        uses: reviewdog/action-golangci-lint@v2.7
   test:
     strategy:
       matrix:
@@ -22,11 +22,11 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
       - name: Check out
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v7
       - name: go test
         run: go test -v -race -coverprofile=profile.cov ./...
 
