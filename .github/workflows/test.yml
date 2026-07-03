@@ -13,7 +13,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v7
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2.7
+        uses: reviewdog/action-golangci-lint@v2.10
   test:
     strategy:
       matrix:
@@ -35,6 +35,6 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
       - name: Send coverage
-        uses: shogo82148/actions-goveralls@v1.6.0
+        uses: shogo82148/actions-goveralls@v1.11.0
         with:
           path-to-profile: profile.cov
