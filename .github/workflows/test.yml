@@ -35,6 +35,6 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
       - name: Send coverage
-        uses: shogo82148/actions-goveralls@v1.11.2
+        uses: shogo82148/actions-goveralls@v1.11.3
         with:
           path-to-profile: profile.cov
