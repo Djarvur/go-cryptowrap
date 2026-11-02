@@ -1,10 +1,10 @@
 module github.com/Djarvur/cryptowrap
 
-go 1.21
+go 1.24
 
 require (
 	github.com/Djarvur/go-aescrypt v0.1.1
-	github.com/fxamacker/cbor/v2 v2.9.6
+	github.com/fxamacker/cbor/v2 v2.10.0
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/ugorji/go/codec v1.3.2
 )
